@@ -25,7 +25,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "app-scheme",
+    "scheme": "loginApp",
     "plugins": [
       "expo-router"
     ]
