@@ -36,9 +36,8 @@ export default function LoginScreen() {
   // ================================
   // 🌐 LOGIN ME GOOGLE (Expo SDK 54+)
   // ================================
-  const redirectUri = AuthSession.makeRedirectUri({
-    useProxy: true, // ✅ përdor auth.expo.io në vend të exp://...
-  });
+ const redirectUri = "https://auth.expo.io/@drin-k/loginApp";
+  console.log("🔍 [Google Redirect URI]:", redirectUri);
 
   const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
     expoClientId: "500331822653-tlrct74836jefk8b08a99altfsirc132.apps.googleusercontent.com",
