@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
-import { Link, useRouter } from "expo-router";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signInWithCredential,
-  GoogleAuthProvider,
-} from "firebase/auth";
+import { View, Text, Button, StyleSheet, Alert } from "react-native";
+import { useRouter } from "expo-router";
+import { getAuth, signInWithCredential, GithubAuthProvider } from "firebase/auth";
 import { app } from "../firebase";
 import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -17,133 +11,84 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const router = useRouter();
   const auth = getAuth(app);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   // ================================
-  // 📧 LOGIN ME EMAIL & PASSWORD
+  // ⚙️ GITHUB LOGIN (REAL IMPLEMENTATION)
   // ================================
-  const handleLogin = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.replace("/home");
-    } catch (err) {
-      setError(err.message);
-    }
-  };
+  const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+  console.log("🔍 [GitHub Redirect URI]:", redirectUri);
 
-  // ================================
-  // 🌐 LOGIN ME GOOGLE (Expo SDK 54+)
-  // ================================
- const redirectUri = "https://auth.expo.io/@drin-k/loginApp";
-  console.log("🔍 [Google Redirect URI]:", redirectUri);
-
-  const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
-    expoClientId: "500331822653-tlrct74836jefk8b08a99altfsirc132.apps.googleusercontent.com",
-    webClientId: "500331822653-tlrct74836jefk8b08a99altfsirc132.apps.googleusercontent.com",
-    iosClientId: "500331822653-tlrct74836jefk8b08a99altfsirc132.apps.googleusercontent.com",
-    redirectUri, // 👈 kjo është thelbësore për të shmangur “invalid_request”
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type === "success") {
-      const { id_token } = googleResponse.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential)
-        .then(() => router.replace("/home"))
-        .catch((err) => setError(err.message));
-    }
-  }, [googleResponse]);
-
-  // Opsionale — për të parë redirect-in në terminal
-  useEffect(() => {
-    console.log("✅ Redirect URI in use:", redirectUri);
-  }, []);
-
-  // ================================
-  // 🐙 LOGIN ME GITHUB (demo mode)
-  // ================================
-  const GITHUB_CLIENT_ID = "Ov23liKRI3UNokX0DcG0"; // vendos Client ID nga GitHub Developer Settings
-
+  const GITHUB_CLIENT_ID = "Ov23liKRI3UNokX0DcG0"; // nga GitHub Developer Settings
   const discovery = {
     authorizationEndpoint: "https://github.com/login/oauth/authorize",
   };
 
-  const [githubRequest, githubResponse, githubPromptAsync] = AuthSession.useAuthRequest(
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: GITHUB_CLIENT_ID,
       scopes: ["read:user", "user:email"],
       redirectUri,
+      usePKCE: false,
     },
     discovery
   );
 
   useEffect(() => {
-    if (githubResponse?.type === "success") {
-      console.log("✅ GitHub login success:", githubResponse);
-      Alert.alert("GitHub Login", "Autorizimi u krye me sukses (demo mode).");
-    }
-  }, [githubResponse]);
+    const handleGitHubAuth = async () => {
+      if (response?.type === "success" && response.params.code) {
+        const { code } = response.params;
+        console.log("✅ GitHub authorization code:", code);
+
+        try {
+          // Thirr backend-in për të shkëmbyer 'code' me 'access_token'
+          const res = await fetch("http://10.180.57.66:3000/exchange_github_token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+
+          const data = await res.json();
+          console.log("🔑 Access token response:", data);
+
+          if (data.access_token) {
+            const credential = GithubAuthProvider.credential(data.access_token);
+            await signInWithCredential(auth, credential);
+            router.replace("/home");
+          } else {
+            Alert.alert("Gabim", "Nuk u mor access_token nga backend!");
+          }
+        } catch (error) {
+          console.error(error);
+          setError("Dështoi login-i me GitHub.");
+        }
+      }
+    };
+
+    handleGitHubAuth();
+  }, [response]);
 
   // ================================
   // 🖥️ UI
   // ================================
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Login me GitHub</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      <Button title="Login" onPress={handleLogin} />
-      <View style={{ marginVertical: 10 }} />
-      <Button
-        title="Login me Google"
-        onPress={() => googlePromptAsync()}
-        color="#DB4437"
-        disabled={!googleRequest}
-      />
-      <View style={{ marginVertical: 10 }} />
       <Button
         title="Login me GitHub"
-        onPress={() => githubPromptAsync()}
+        onPress={() => promptAsync()}
         color="#333"
-        disabled={!githubRequest}
+        disabled={!request}
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
-
-      <Link href="/signup" style={styles.link}>
-        Don’t have an account? Sign up
-      </Link>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 30 },
-  input: {
-    width: "90%",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    marginBottom: 15,
-    padding: 10,
-  },
+  title: { fontSize: 26, fontWeight: "bold", marginBottom: 25 },
   error: { color: "red", marginTop: 10 },
-  link: { color: "blue", marginTop: 20 },
 });
