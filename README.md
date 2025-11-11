@@ -43,19 +43,17 @@ GitHub login uses a **two-step process** between the frontend and backend.
   const credential = GithubAuthProvider.credential(access_token);
   await signInWithCredential(auth, credential);
 
-##📡 Local Network Setup (Testing on Real Devices)
+## 📡 Local Network Setup (Testing on Real Devices)
 
-When testing on a real phone using Expo Go, you must make sure the app can reach your backend server.
+When testing on a real phone using **Expo Go**, you must make sure the app can reach your backend server.
 
-Connect both your laptop and your phone to the same Wi-Fi or Hotspot.
+1. **Connect both your laptop and your phone** to the same Wi-Fi or Hotspot.  
+2. Run the following command to find your local IP address:  
+   - **Windows:** `ipconfig`  
+   - **Mac/Linux:** `ifconfig`
 
-Run the following command to find your local IP address:
+   Example output:
 
-Windows: ipconfig
-
-Mac/Linux: ifconfig
-
-Example output:
 
 IPv4 Address: 172.20.10.3
 
