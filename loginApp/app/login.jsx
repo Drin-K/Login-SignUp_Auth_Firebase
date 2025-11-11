@@ -64,7 +64,7 @@ export default function LoginScreen() {
         console.log("✅ GitHub authorization code:", code);
 
         try {
-          const res = await fetch("http://10.180.57.66:3000/exchange_github_token", {
+          const res = await fetch("http://172.20.10.3:3000/exchange_github_token", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code }),
