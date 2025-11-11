@@ -43,7 +43,7 @@ GitHub login uses a **two-step process** between the frontend and backend.
   const credential = GithubAuthProvider.credential(access_token);
   await signInWithCredential(auth, credential);
 
-📡 Local Network Setup (Testing on Real Devices)
+##📡 Local Network Setup (Testing on Real Devices)
 
 When testing on a real phone using Expo Go, you must make sure the app can reach your backend server.
 
