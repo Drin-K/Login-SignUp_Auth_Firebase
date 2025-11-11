@@ -65,7 +65,7 @@ const res = await fetch("http://172.20.10.3:3000/exchange_github_token", {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ code }),
 });
-
+```
 
 Start your backend server:
 
