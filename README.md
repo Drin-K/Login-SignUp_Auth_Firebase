@@ -42,3 +42,38 @@ GitHub login uses a **two-step process** between the frontend and backend.
   ```js
   const credential = GithubAuthProvider.credential(access_token);
   await signInWithCredential(auth, credential);
+
+📡 Local Network Setup (Testing on Real Devices)
+
+When testing on a real phone using Expo Go, you must make sure the app can reach your backend server.
+
+Connect both your laptop and your phone to the same Wi-Fi or Hotspot.
+
+Run the following command to find your local IP address:
+
+Windows: ipconfig
+
+Mac/Linux: ifconfig
+
+Example output:
+
+IPv4 Address: 172.20.10.3
+
+
+Update the backend URL in your login.jsx file:
+
+const res = await fetch("http://172.20.10.3:3000/exchange_github_token", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ code }),
+});
+
+
+Start your backend server:
+
+node server.js
+
+
+Open the Expo Go app on your phone and try “Login with GitHub”.
+
+✅ If both devices are connected properly, the login will complete successfully and the user will be redirected to /home.
